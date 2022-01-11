@@ -155,7 +155,7 @@ void test7(py_shared_ptr<PyObject> pList1)
 {
 	std::cout << "test7" << std::endl;
 
-	py_shared_ptr<PyObject, false> temp1 = PyList_GetItem(pList1.get(), 0);
+	py_shared_ptr<PyObject> temp1 = PyList_GetItem(pList1.get(), 0);
 	PyObject_Print(temp1.get(), stdout, 0);
 	std::cout << std::endl;
 }
