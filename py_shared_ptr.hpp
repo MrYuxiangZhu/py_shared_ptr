@@ -1,8 +1,8 @@
 #pragma once
 #include <iostream>
 #include <algorithm>
-#include <Python.h>
 #include <assert.h>
+#include <Python.h>
 
 #ifndef _NODISCARD
 #define _NODISCARD [[nodiscard]]
@@ -56,14 +56,14 @@ public:
 	}
 
 	template <typename _Ty>
-	void _Decref(_Ty* _Ptr) noexcept
+	void _Decref(_Ty* _Ptr, bool _Enable) noexcept
 	{
 		if (nullptr != this->_Count)
 		{
 			--(*this->_Count);
 			if (0 == *this->_Count)
 			{
-				if (NULL != _Ptr && Py_REFCNT(_Ptr) > 0)
+				if (_Enable && _Ptr && Py_REFCNT(_Ptr) > 0)
 				{
 					Py_XDECREF(_Ptr);
 				}
@@ -77,7 +77,7 @@ private:
 	long* _Count{ nullptr };
 };
 
-template <typename _Ty>
+template <typename _Ty, bool _Enable = true>
 class _Py_ptr_base
 {
 protected:
@@ -161,7 +161,7 @@ protected:
 		std::swap(this->_Ptr, _Right._Ptr);
 		std::swap(this->_Rep, _Right._Rep);
 	}
-
+		
 	void _Incref() noexcept
 	{
 		_Rep._Incref(this->_Ptr);
@@ -169,7 +169,7 @@ protected:
 
 	void _Decref() noexcept
 	{
-		_Rep._Decref(this->_Ptr);
+		_Rep._Decref(this->_Ptr, _Enable);
 	}
 
 protected:
@@ -177,11 +177,11 @@ protected:
 	_Py_ref_count_base _Rep{ nullptr };
 };
 
-template <typename _Ty>
-class py_shared_ptr : public _Py_ptr_base<_Ty>
+template <typename _Ty, bool _Enable = true>
+class py_shared_ptr : public _Py_ptr_base<_Ty, _Enable>
 {
 private:
-	using _Shared_base = _Py_ptr_base<_Ty>;
+	using _Shared_base = _Py_ptr_base<_Ty, _Enable>;
 public:
 	using typename _Shared_base::_Element_type;
 
@@ -213,7 +213,7 @@ public:
 	template <typename _Uy>
 	py_shared_ptr(py_shared_ptr<_Uy>&& _Right) noexcept
 	{
-		__super::_Alias_move_construct_from(std::move(_Right));
+		__super::_Move_construct_from(std::move(_Right));
 	}
 
 	template <typename _Uy>
@@ -282,43 +282,43 @@ public:
 	}
 };
 
-template <typename _Ty1, typename _Ty2>
+template <class _Ty1, class _Ty2>
 _NODISCARD bool operator==(const py_shared_ptr<_Ty1>& _Left, const py_shared_ptr<_Ty2>& _Right) noexcept
 {
 	return _Left.get() == _Right.get();
 }
 
-template <typename _Ty1, typename _Ty2>
+template <class _Ty1, class _Ty2>
 _NODISCARD bool operator<(const py_shared_ptr<_Ty1>& _Left, const py_shared_ptr<_Ty2>& _Right) noexcept
 {
 	return _Left.get() < _Right.get();
 }
 
-template <typename _Ty1, typename _Ty2>
+template <class _Ty1, class _Ty2>
 _NODISCARD bool operator<=(const py_shared_ptr<_Ty1>& _Left, const py_shared_ptr<_Ty2>& _Right) noexcept
 {
 	return _Left.get() <= _Right.get();
 }
 
-template <typename _Ty1, typename _Ty2>
+template <class _Ty1, class _Ty2>
 _NODISCARD bool operator>(const py_shared_ptr<_Ty1>& _Left, const py_shared_ptr<_Ty2>& _Right) noexcept
 {
 	return _Left.get() > _Right.get();
 }
 
-template <typename _Ty1, typename _Ty2>
+template <class _Ty1, class _Ty2>
 _NODISCARD bool operator>=(const py_shared_ptr<_Ty1>& _Left, const py_shared_ptr<_Ty2>& _Right) noexcept
 {
 	return _Left.get() >= _Right.get();
 }
 
-template <typename _Ty>
+template <class _Ty>
 _NODISCARD bool operator==(const py_shared_ptr<_Ty>& _Left, nullptr_t) noexcept
 {
 	return _Left.get() == nullptr;
 }
 
-template <typename _Ty>
+template <class _Ty>
 _NODISCARD bool operator==(nullptr_t, const py_shared_ptr<_Ty>& _Right) noexcept
 {
 	return nullptr == _Right.get();
