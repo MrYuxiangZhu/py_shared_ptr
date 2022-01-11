@@ -2,7 +2,7 @@
 //
 
 #include <iostream>
-#include "py_memory.h"
+#include "py_memory.hpp"
 
 using namespace std;
 using namespace Python;
